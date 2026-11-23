@@ -1,0 +1,37 @@
+# Keeps this mirror up to date with its source, once a week (each repository at its own time) or by hand.
+# Written by zuujis-cc0/cc0-mirror, which decides which assets belong here (plan/polyhaven.json) and holds the code
+# that runs here. Uses only this repository's own token, which can push to this repository and nothing else.
+# Only actions published by GitHub itself, pinned by commit.
+name: update
+
+on:
+  schedule:
+    - cron: "10 9 * * 5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: repo
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: zuujis-cc0/cc0-mirror
+          path: cc0-mirror
+          persist-credentials: false
+      - name: Update from Poly Haven
+        working-directory: cc0-mirror
+        env:
+          MIRROR_ORG: ${{ github.repository_owner }}
+          MIRROR_REPO: "zuujis-cc0/cc0-mirror"
+        run: python3 -m mirror.sync polyhaven polyhaven-textures-wood-4 --self "$GITHUB_WORKSPACE/repo"
